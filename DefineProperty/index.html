@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>inedx</title>
+</head>
+<body>
+	<div id="app"></div>
+	<button onclick="changeMsg()">change</button>
+	<script type="text/html" id="appTpl">
+		{{ d.msg }}
+		<button>{{d.count}}</button>
+	</script>
+	<script type="text/javascript" src="laytpl.js"></script>
+	<script type="text/javascript" src="V.js"></script>
+	<script type="text/javascript">
+		var vx = new V({
+			el: "#app",
+			tpl: "#appTpl",
+			data: {
+				msg: "hello",
+				count: 0
+			}
+		})
+		function changeMsg(){
+			vx.data.msg = "world";
+			vx.data.count++;
+		}
+	</script>
+</body>

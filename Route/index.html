@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <style>
+	    #app a {
+	        display: inline-block;
+	        width: 100px;
+	        margin: 0 20px;
+	        line-height: 40px;
+	        text-align: center;
+	        box-shadow: 1px 1px 1px 1px #ccc;
+	    }
+	    
+	    #page {
+	        height: 400px;
+	        border: 1px solid #dedede;
+	        margin-bottom: 20px;
+	    }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <div id="page"></div>
+        <nav>
+            <a data-href="/login">登陆</a>
+            <a data-href="/signup">注册</a>
+        </nav>
+    </div>
+    <script type="text/javascript" src="Route.js"></script>
+    <script type="text/javascript">
+    var router = new Router();
+    router.start();
+
+    // 根据路由渲染页面，该功能在路由注册函数中实现，
+    // vue中每个路由对应的就是一个组件
+    var $page = document.getElementById("page");
+    router.addRoute('/signup', () => {
+        $page.innerHTML = "<h1>欢迎注册</h1>";
+    });
+
+    router.addRoute('/login', () => {
+        $page.innerHTML = "<h1>欢迎登陆</h1>";
+    })
+    </script>
+</body>
+
+</html>

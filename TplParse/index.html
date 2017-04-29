@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+</head>
+
+<body>
+    <script type="text/javascript" src="Tpl.js"></script>
+    <script type="text/javascript">
+    var data = {
+        skills: ["js", "html", "css"]
+    };
+    var tpl = 'My skills:' + '<%for(var index in data.skills) {%>' + '<a href="#"><%data.skills[index]%></a>' + '<%}%>';
+
+    var t = new Tpl();
+    console.log(t.render(tpl));
+    </script>
+</body>
+
+</html>

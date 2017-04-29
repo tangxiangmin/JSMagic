@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Promise</title>
+</head>
+<body>
+	<script type="text/javascript" src="Promise.js"></script>
+	<script type="text/javascript">
+		new Promise((res, rej)=>{
+			// 异步测试
+			setTimeout(function(){
+				var data = "hello from future!";
+				res(data);
+			}, 1000);
+			// 同步测试
+			// var data = "hello from future!";
+			// res(data);
+		}).then((data)=>{
+			console.log(data);
+			return new Promise((reslove, reject)=>{
+				setTimeout(()=>{
+					data += "--No.2";
+					reslove(data);
+				}, 1000);
+			})
+		}).then((data)=>{
+			console.log(data);
+		})
+		
+	</script>
+</body>
+</html>
