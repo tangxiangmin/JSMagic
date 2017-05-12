@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>简易的模块化系统</title>
+</head>
+<body>
+    <script src="module.js"></script>
+    <script>
+        define("bar", [], function() {
+            function hello() {
+                console.log("hello from bar");
+            }
+
+            return {
+                hello: hello
+            };
+        });
+
+        //    var bar = require("bar");
+        // bar.hello();
+
+        define("foo", ["bar"], function(bar) {
+
+            function hello() {
+                bar.hello();
+                console.log("hello from foo...");
+            }
+
+            return {
+                hello: hello
+            };
+        });
+
+
+        var foo = require("foo");
+        foo.hello();
+    </script>
+</body>
+</html>
