@@ -8,7 +8,7 @@ class Tpl{
         this.jsExp = /(^( )?(if|for|else|switch|case|break|{|}))(.*)?/g;
     }
 
-    render(tpl){
+    render(tpl, data){
         var re = this.re,
             jsExp = this.jsExp,
             res = null;

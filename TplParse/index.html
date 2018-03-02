@@ -15,7 +15,7 @@
     var tpl = 'My skills:' + '<%for(var index in data.skills) {%>' + '<a href="#"><%data.skills[index]%></a>' + '<%}%>';
 
     var t = new Tpl();
-    console.log(t.render(tpl));
+    console.log(t.render(tpl, data));
     </script>
 </body>
 
