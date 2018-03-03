@@ -1,6 +1,6 @@
 JSMagic
 ===
-这个项目用于整理常见框架的一些原理实现。很多都是顺手的草稿代码，不要在意这些细节哈哈
+整理JavaScript的一些原理实现。很多都是顺手的草稿代码，不要在意这些细节哈哈
 
 ## 目录
 * 简单的Promise原理实现
@@ -9,4 +9,4 @@ JSMagic
 * next中间件原理
 * 前端模板引擎的实现思路
 
-![哈哈](ah.jpg)
+![哈哈](http://otdr0meos.bkt.clouddn.com/JSMagic/ah.jpg)
