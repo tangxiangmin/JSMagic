@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+        <title>Document</title>
+    </head>
+    <body>
+        <form id="myForm">
+            <input type="file" name="file" />
+        </form>
+
+        <button id="submit">click</button>
+        <script src="./node_modules/jquery/dist/jquery.js"></script>
+        <script>
+            async function post(url, data) {
+                return new Promise((resolve, reject) => {
+                    var xhr = new XMLHttpRequest();
+                    xhr.onreadystatechange = () => {
+                        let state = xhr.readyState;
+                        if (state === 4) {
+                            resolve(xhr.responseText);
+                        }
+                    };
+
+                    xhr.onerror = err => {
+                        reject(err);
+                    };
+
+                    xhr.open("POST", url, false);
+                    xhr.send(data);
+
+                });
+            }
+
+            function slice(file, piece = 1024 * 1024 * 5) {
+                let totalSize = file.size; // 文件总大小
+                let start = 0; // 每次上传的开始字节
+                let end = start + piece; // 每次上传的结尾字节
+                let chunks = [];
+                while (start < totalSize) {
+                    // 根据长度截取每次需要上传的数据
+                    // File对象继承自Blob对象，因此包含slice方法
+                    let blob = file.slice(start, end);
+                    chunks.push(blob);
+
+                    start = end;
+                    end = start + piece;
+                }
+                return chunks;
+            }
+
+            
+            function createContext(file) {
+                return file.name + file.length
+            }
+            // 获取已上传切片记录
+            function getUploadSliceRecord(context){
+                let record = localStorage.getItem(context)
+                if(!record){
+                    return []
+                }else {
+                    try{
+                        return JSON.parse(record)
+                    }catch(e){}
+                }
+            }
+            // 保存已上传切片
+            function saveUploadSliceRecord(context, sliceIndex){
+                let list = getUploadSliceRecord(context)
+                list.push(sliceIndex)
+                localStorage.setItem(context, JSON.stringify(list))
+            }
+
+            $("#submit").on("click", function() {
+                let file = document.querySelector("[name=file]").files[0];
+                const LENGTH = 1024 * 1024 * 0.1;
+                let chunks = slice(file, LENGTH);
+
+                let context = createContext(file);
+                let record = getUploadSliceRecord(context)
+
+                let tasks = [];
+                chunks.forEach((chunk, index) => {
+                    // 已上传的切片则不再重新上传
+                    if(record.includes(index)){
+                        return
+                    }
+
+                    let fd = new FormData();
+                    fd.append("file", chunk);
+                    fd.append("context", context);
+                    fd.append("chunk", index + 1);
+
+                    let task = post("/mkblk.php", fd).then(res=>{
+                        // 上传成功后保存已上传切片记录
+                        saveUploadSliceRecord(context, index)
+                        record.push(index)
+                    })
+                    tasks.push(task);
+                });
+
+                Promise.all(tasks).then(res => {
+                    let fd = new FormData();
+                    fd.append("context", context);
+                    fd.append("chunks", chunks.length);
+                    post("/mkfile.php", fd).then(res => {
+                        console.log(res);
+                    });
+                });
+            });
+        </script>
+    </body>
+</html>

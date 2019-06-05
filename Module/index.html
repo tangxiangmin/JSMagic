@@ -8,36 +8,8 @@
     <title>简易的模块化系统</title>
 </head>
 <body>
-    <script src="module.js"></script>
-    <script>
-        define("bar", [], function() {
-            function hello() {
-                console.log("hello from bar");
-            }
-
-            return {
-                hello: hello
-            };
-        });
-
-        //    var bar = require("bar");
-        // bar.hello();
-
-        define("foo", ["bar"], function(bar) {
-
-            function hello() {
-                bar.hello();
-                console.log("hello from foo...");
-            }
-
-            return {
-                hello: hello
-            };
-        });
-
-
-        var foo = require("foo");
-        foo.hello();
-    </script>
+    <!-- <script src="amd.js"></script> -->
+    <script src="cmd.js"></script>
+   
 </body>
 </html>
