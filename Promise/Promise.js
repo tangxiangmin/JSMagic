@@ -26,7 +26,7 @@
 			resolver((value)=>{
 				this.updateStatus(FULFILLED, value);
 			}, (reason)=>{
-				this.updateStatus(REJECTED, value);
+				this.updateStatus(REJECTED, reason);
 			});
 
 			// 构造函数返回当前promise对象
