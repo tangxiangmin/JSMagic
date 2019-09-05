@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <button id="btn">get jsonp</button>
+    <script>
+
+        window.getJSONP = (() => {
+            let id = 0
+            return (url, callback) => {
+                // 注册全局函数
+                let name = `_jsonp_callback_${++id}`
+                window[name] = callback
+
+                url += (url.indexOf('?') > -1 ? '&' : '?') + `callback=${name}`
+
+                let script = document.createElement('script')
+
+                script.onload = function () {
+                    script.parentNode.removeChild(script)
+                    delete window[name]
+                }
+                script.src = url
+
+                document.body.appendChild(script)
+            }
+        })();
+
+
+        btn.onclick = function () {
+            // 假设当前页面域名为 http://localhost:9999/jsonp.html
+            var url = 'http://localhost:8888/jsonp.php'
+            console.log(url)
+            window.getJSONP(url, function (response) {
+                console.log(response)
+            })
+        }
+    </script>
+</body>
+
+</html>

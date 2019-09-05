@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <script>
+        window.addEventListener("message", function (event) {
+            // 一般需要判断是否为受信任的来源
+            if (event.origin === 'http://localhost:8888') {
+                const { data } = event
+                console.log(data)
+            }
+        }, false);
+
+        getMessage('http://localhost:8888/postmessage.php')
+
+        function getMessage(url) {
+            var iframe = document.createElement('iframe')
+            iframe.src = url
+            iframe.onload = function () {
+                // 这里无法直接获取iframe中的数据，因此需要在iframe中通过postMessage主动发送消息才行
+                // console.log(iframe.contentWindow.document.body)
+                iframe.parentNode.removeChild(iframe)
+            }
+            iframe.style.display = 'none'
+            document.body.appendChild(iframe)
+        }
+    </script>
+</body>
+
+</html>

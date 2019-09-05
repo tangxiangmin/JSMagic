@@ -8,5 +8,8 @@ JSMagic
 * 对象描述符与响应式数据
 * next中间件原理
 * 前端模板引擎的实现思路
+* 节流、去抖
+* 大文件上传
+* JSONP
 
-![哈哈](http://otdr0meos.bkt.clouddn.com/JSMagic/ah.jpg)
+![JavaScript](https://tva1.sinaimg.cn/large/006y8mN6gy1g6owe7pw37j30dq0dg75g.jpg)
