@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="app"></div>
+    <div id="app2"></div>
+
+    <button id="btn">diff</button>
+    <script src="./vnode.js"></script>
+    <script src="./recursion_diff.js"></script>
+
+    <script>
+
+        let root,
+            root2
+        // 初始化与diff过程分离
+        function test() {
+            root = createRoot({
+                title: 'hello vnode',
+                list: [1, 2, 3]
+            })
+
+            let dom = VNode2DOM(root)
+            app.appendChild(dom)
+
+            let data2 = {
+                title: 'change title',
+                list: [3, 2]
+            }
+        }
+
+        // 初始化与diff一同处理
+        function test2() {
+            root = createRoot({
+                title: 'hello vnode',
+                list: [1, 2, 3]
+            })
+
+            let patches = diff(null, root)
+            root.$parent = {
+                $el: app
+            }
+            doPatch(patches)
+        }
+
+        btn.onclick = function () {
+
+            let data2 = {
+                // title: 'change title',
+                title: 'hello vnode',
+                list: [1, 2, 3]
+            }
+
+            // root2 = createRoot(data2)
+
+            root2 = createAnotherRoot(data2)
+
+            var patches = diff(root, root2)
+            console.log(patches)
+            doPatch(patches)
+            root = root2
+        }
+        function testKey() {
+            // true 使用元素值作为key, 
+            // 传false时与diffChildrenByType获得的patches相同
+            let list1 = createList([1, 2, 3], true)
+            let patches = diff(null, list1)
+            list1.$parent = {
+                $el: app
+            }
+
+            doPatch(patches)
+            btn.onclick = function () {
+                let list2 = createList([3, 2, 1], true)
+                let patches = diff(list1, list2)
+                console.log(patches)
+
+                doPatch(patches)
+                list1 = list2
+            }
+        }
+        // test()
+        // test2()
+        testKey()
+
+        // let html = VNode2HTML(root)
+        // app2.innerHTML = html
+        function createRoot(data) {
+            let list = createList(data.list)
+
+            let title = createVNode('h1', {}, [data.title])
+            let root = createVNode('div', {}, [title, list])
+            return root
+        }
+
+        function createAnotherRoot(data) {
+            let list = createList(data.list)
+            let p = createVNode('p', {}, ['this is p'])
+
+            let title = createVNode('h1', {}, [data.title])
+
+            // 测试插入节点
+            let root = createVNode('div', {}, [title, p, list])
+            return root
+        }
+
+        function createList(list, hasKey = false) {
+            let listItem = list.map((item) => {
+                return createVNode('li', {
+                    key: hasKey ? item : undefined
+                }, [item])
+            })
+            return createVNode('ul', {
+                class: 'list-simple',
+            }, listItem)
+        }
+
+
+    </script>
+</body>
+
+</html>

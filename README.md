@@ -11,5 +11,6 @@ JSMagic
 * 节流、去抖
 * 大文件上传
 * JSONP
+* Vnode相关实现，包括diff算法、将vnode转换成DOM节点或HTML字符串即可
 
 ![JavaScript](https://tva1.sinaimg.cn/large/006y8mN6gy1g6owe7pw37j30dq0dg75g.jpg)
