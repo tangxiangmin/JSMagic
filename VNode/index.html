@@ -17,11 +17,10 @@
     <script src="./recursion_diff.js"></script>
 
     <script>
-
         let root,
             root2
         // 初始化与diff过程分离
-        function test() {
+        function testVNode2DOM() {
             root = createRoot({
                 title: 'hello vnode',
                 list: [1, 2, 3]
@@ -34,10 +33,26 @@
                 title: 'change title',
                 list: [3, 2]
             }
+            btn.onclick = function () {
+                let data2 = {
+                    // title: 'change title',
+                    title: 'hello vnode',
+                    list: [1, 2, 3]
+                }
+
+                // root2 = createRoot(data2)
+
+                root2 = createAnotherRoot(data2)
+
+                var patches = diff(root, root2)
+                console.log(patches)
+                doPatch(patches)
+                root = root2
+            }
         }
 
         // 初始化与diff一同处理
-        function test2() {
+        function testDiff() {
             root = createRoot({
                 title: 'hello vnode',
                 list: [1, 2, 3]
@@ -48,25 +63,24 @@
                 $el: app
             }
             doPatch(patches)
-        }
 
-        btn.onclick = function () {
+            btn.onclick = function () {
+                let data2 = {
+                    // title: 'change title',
+                    title: 'hello vnode',
+                    list: [1, 2, 3]
+                }
+                // root2 = createRoot(data2)
+                root2 = createAnotherRoot(data2)
 
-            let data2 = {
-                // title: 'change title',
-                title: 'hello vnode',
-                list: [1, 2, 3]
+                var patches = diff(root, root2)
+                console.log(patches)
+                doPatch(patches)
+                root = root2
             }
-
-            // root2 = createRoot(data2)
-
-            root2 = createAnotherRoot(data2)
-
-            var patches = diff(root, root2)
-            console.log(patches)
-            doPatch(patches)
-            root = root2
         }
+
+
         function testKey() {
             // true 使用元素值作为key, 
             // 传false时与diffChildrenByType获得的patches相同
@@ -86,12 +100,21 @@
                 list1 = list2
             }
         }
-        // test()
-        // test2()
+
+        function testHTML() {
+            root = createRoot({
+                title: 'hello vnode',
+                list: [1, 2, 3]
+            })
+            let html = VNode2HTML(root)
+            app2.innerHTML = html
+        }
+
+        // testVNode2DOM()
+        // testHTML()
+        // testDiff()
         testKey()
 
-        // let html = VNode2HTML(root)
-        // app2.innerHTML = html
         function createRoot(data) {
             let list = createList(data.list)
 

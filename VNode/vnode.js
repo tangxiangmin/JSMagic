@@ -1,6 +1,6 @@
 
 // vnode实际上就是一个用于描述UI的对象，包含一些基本属性
-const TEXT_NODE = '__text_node'
+const TEXT_NODE = Symbol('__text_node')
 
 function isTextNode(type) {
     return type === TEXT_NODE
@@ -89,7 +89,7 @@ function VNode2HTML(root) {
 
     let el = '' // 当前节点渲染的html片段
     if (isTextNode(type)) {
-        el += root // 纯文本节点则直接返回
+        el += props.nodeValue // 纯文本节点则直接返回
     } else {
         let attrs = ''
         for (var key in props) {
