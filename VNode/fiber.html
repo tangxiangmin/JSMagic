@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <button id="btn">click</button>
+    <div id="app"></div>
+    <script src="./fiber.js"></script>
+    <script src="./schedule.js"></script>
+    <script src="./circulation_diff.js"></script>
+    <script src="./doPatch.js"></script>
+    <script>
+
+        // testSync()
+        testSchedule()
+        testRest()
+
+        // 同步渲染
+        function testSync() {
+            let root = createRoot({
+                title: 'hello fiber',
+                list: [1, 2, 3]
+            })
+
+            root.$parent = {
+                $el: app
+            }
+
+            let patches = diffSync(null, root)
+            doPatch(patches)
+
+            btn.onclick = function () {
+                let root2 = createRoot({
+                    title: 'title change',
+                    list: [3, 2]
+                })
+
+                let patches = diffSync(root, root2)
+                console.log(patches)
+                doPatch(patches)
+                root = root2
+            }
+        }
+        // 引入调度器
+        function testSchedule() {
+            let root = createRoot({
+                title: 'hello fiber',
+                list: [1, 2, 3]
+            })
+
+            root.$parent = {
+                $el: app
+            }
+            let isInit = false
+            // 现在需要在回调函数中等待diff执行完毕
+            diff(null, root, (patches) => {
+                doPatch(patches)
+                isInit = true
+            })
+
+            btn.onclick = function () {
+                if (!isInit) {
+                    console.log('应用暂未初始化完毕，请稍后重试...')
+                    return
+                }
+
+                let root2 = createRoot({
+                    title: 'title change',
+                    list: [3, 2]
+                })
+
+                diff(root, root2, (patches) => {
+                    console.log(patches)
+                    doPatch(patches)
+                    root = root2
+                })
+            }
+        }
+        // 测试重置diff
+        function testRest() {
+            let root = createRoot({
+                title: 'hello fiber',
+                list: [1, 2, 3]
+            })
+
+            root.$parent = {
+                $el: app
+            }
+            let isInit = false
+            // 现在需要在回调函数中等待diff执行完毕
+            diff(null, root, (patches) => {
+                doPatch(patches)
+                isInit = true
+            })
+
+            btn.onclick = function () {
+                if (!isInit) {
+                    console.log('应用暂未初始化完毕，请稍后重试...')
+                    return
+                }
+
+                let root2 = createRoot({
+                    title: 'title change',
+                    list: [3, 2]
+                })
+
+                diff(root, root2, (patches) => {
+                    console.log('normal patches', patches)
+                    doPatch(patches)
+                    root = root2
+                })
+
+                // 在上面diff还未结束时，数据又发生了变化
+                setTimeout(() => {
+                    let root3 = createRoot({
+                        title: 'title change in timer',
+                        list: [3, 2]
+                    })
+
+                    diff(root, root3, (patches) => {
+                        console.log('timer patches', patches)
+                        doPatch(patches)
+                        root = root3
+                    })
+
+                }, 1)
+            }
+        }
+
+        function createRoot(data) {
+            let list = createList(data.list)
+
+            let title = createFiber('h1', {}, [data.title])
+            let root = createFiber('div', {}, [title, list])
+            return root
+        }
+
+        function createAnotherRoot(data) {
+            let list = createList(data.list)
+            let p = createFiber('p', {}, ['this is p'])
+
+            let title = createFiber('h1', {}, [data.title])
+
+            // 测试插入节点
+            let root = createFiber('div', {}, [title, p, list])
+            return root
+        }
+
+        function createList(list, hasKey = false) {
+            let listItem = list.map((item) => {
+                return createFiber('li', {
+                    key: hasKey ? item : undefined
+                }, [item])
+            })
+            return createFiber('ul', {
+                class: 'list-simple',
+            }, listItem)
+        }
+    </script>
+</body>
+
+</html>
