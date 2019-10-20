@@ -17,9 +17,7 @@ function createFiber(type, props, children) {
         $el: null,
     }
 
-    let firstChild
-
-    vnode.children = children.map((child, index) => {
+    children = children.map((child, index) => {
         if (!child.type) {
             // 处理文本节点
             child = {
@@ -30,19 +28,25 @@ function createFiber(type, props, children) {
                 children: []
             }
         }
-
         child.index = index
+        return child
+    })
 
-        child.$parent = vnode // 每个子节点保存对父节点的引用
+    vnode.children = bindFiber(vnode, children)
+    return vnode
+}
+
+function bindFiber(parent, children) {
+    let firstChild
+    return children.map((child) => {
+        child.$parent = parent // 每个子节点保存对父节点的引用
+
         if (!firstChild) {
-            vnode.$child = child // 父节点保存对于第一个子节点的引用
+            parent.$child = child // 父节点保存对于第一个子节点的引用
         } else {
             firstChild.$sibling = child // 保存对于下一个兄弟节点的引用
         }
         firstChild = child
         return child
     })
-
-    return vnode
 }
-

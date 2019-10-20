@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="app"></div>
+
+    <script src="./fiber.js"></script>
+    <script src="./schedule.js"></script>
+    <script src="./circulation_diff.js"></script>
+    <script src="./doPatch.js"></script>
+    <script src='./component.js'></script>
+    <script>
+
+        class SubTitle extends Component {
+            render() {
+                let { title } = this.props
+                return createFiber('h1', {}, [title])
+            }
+        }
+
+        class App extends Component {
+            state = {
+                title: 'hello component',
+                list: [1, 2, 3]
+            }
+
+            // 最原始的更新数据的方法
+            changeTitle0 = () => {
+                this.state.title = 'change title from click handler0'
+                let old = this.vnode
+                let root = this.render()
+                diff(old, root, (patches) => {
+                    doPatch(patches)
+                })
+            }
+            // 封装diff
+            changeTitle = () => {
+                this.setState({
+                    title: 'change title from click handler1'
+                }, () => {
+                    console.log('done1')
+                })
+                // console.log(this.state.title) // 原来的title
+                this.setState({
+                    title: 'change title from click handler2'
+                }, () => {
+                    console.log('done2')
+                })
+                // console.log(this.state.title) // 原来的title
+            }
+
+            // render方法返回的是一个vnode节点，并由Root实例维护渲染和更新该节点需要的数据及方法
+            render() {
+                // 根据state时初始化数据
+                let { list, title } = this.state
+                let listItem = list.map((item) => {
+                    return createFiber('li', {
+                        key: item
+                    }, [item])
+                })
+                let ul = createFiber('ul', {
+                    class: 'list-simple',
+                }, listItem)
+
+                let head = createFiber('h1', {
+                    onClick: this.changeTitle
+                }, [title])
+
+                // 测试子组件
+                // let head = createFiber(SubTitle, {
+                //     title,
+                //     onClick: this.changeTitle
+                // }, [])
+
+                let vnode = createFiber('div', {
+                    class: 'page'
+                }, [head, ul])
+                return vnode
+            }
+        }
+
+        // let root = new App().render()
+        let root = createFiber(App, {}, [])
+        renderDOM(root, document.getElementById("app"), () => {
+            console.log('inited')
+            console.log(root)
+        })
+    </script>
+</body>
+
+</html>

@@ -152,10 +152,10 @@
             return root
         }
 
-        function createList(list, hasKey = false) {
+        function createList(list) {
             let listItem = list.map((item) => {
                 return createFiber('li', {
-                    key: hasKey ? item : undefined
+                    key: item
                 }, [item])
             })
             return createFiber('ul', {

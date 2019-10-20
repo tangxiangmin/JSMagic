@@ -65,26 +65,37 @@ function doPatch(patches) {
         })
 }
 
+// 根据type判断是是否为自定义组件
+function isComponent(type) {
+    return typeof type === 'function'
+}
 // 创建节点
 function createDOM(node) {
     let type = node.type
-    return isTextNode(type) ?
-        document.createTextNode(node.props.nodeValue) :
-        document.createElement(type)
+    return isComponent(type) ?
+        createComponent(node) :
+        isTextNode(type) ?
+            document.createTextNode(node.props.nodeValue) :
+            document.createElement(type)
 }
 // 将节点插入父节点，如果节点存在父节点中，则调用insertBefore执行的是移动操作而不是复制操作，因此也可以用来进行MOVE操作
 function insertDOM(newNode) {
-    let parent = newNode.$parent.$el
-    let children = parent.children
+    let parent = newNode.$parent && newNode.$parent.$el
+    if (parent) {
+        let children = parent.children
 
-    let el = newNode.$el
-    let after = children[newNode.index]
+        let el = newNode.$el
 
-    after ? parent.insertBefore(el, after) : parent.appendChild(el)
+        let after = children[newNode.index]
+
+        after ? parent.insertBefore(el, after) : parent.appendChild(el)
+    }
 }
 // 设置DOM节点属性
 function setAttributes(vnode, attrs) {
-    if (isTextNode(vnode.type)) {
+    if (isComponent(vnode.type)) {
+
+    } else if (isTextNode(vnode.type)) {
         vnode.$el.nodeValue = vnode.props.nodeValue
     } else {
         let el = vnode.$el
@@ -104,4 +115,9 @@ function setAttribute(el, prop, val) {
     } else {
         el.setAttribute(prop, val)
     }
+}
+
+// 创建组件
+function createComponent(node) {
+    return node.$child.$el // 组件节点的$el使用他的（唯一）子节点的DOM实例
 }

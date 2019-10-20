@@ -62,7 +62,15 @@ function performUnitWork(fiber, patches) {
     // 任务一：对比当前新旧节点，收集变化
     diffFiber(oldFiber, fiber, patches)
     // 任务二：为新节点中children的每个元素找到需要对比的旧节点，设置oldFiber属性，方便下个循环继续执行performUnitWork
-    diffChildren(oldFiber && oldFiber.children || [], fiber.children, patches)
+    let oldChildren
+    if (isComponent(fiber.type) && fiber.$instance) {
+        let child = fiber.$instance.render()
+        oldChildren = fiber.children
+        fiber.children = bindFiber(fiber, [child])
+    } else {
+        oldChildren = oldFiber && oldFiber.children || []
+    }
+    diffChildren(oldChildren, fiber.children, patches)
 
     // 将游标移动至新vnode树中的下一个节点，以
     // (div, {}, [
@@ -88,24 +96,50 @@ function performUnitWork(fiber, patches) {
 
     return null
 }
-
+// 我们保证比较的节点的type实现相同的
 function diffFiber(oldNode, newNode, patches) {
     if (!oldNode) {
         // 当前节点与其子节点都将插入
         patches.push({ type: INSERT, newNode })
-    } else {
-        // 如果存在有变化的属性，则使用新节点的属性更新旧节点
-        let attrs = diffAttr(oldNode.props, newNode.props) // 发生变化的属性
-        if (Object.keys(attrs).length > 0) {
-            patches.push({ type: UPDATE, oldNode, newNode, attrs })
-        }
+        if (isComponent(newNode.type)) {
+            let component = newNode.type
+            let instance = new component()
+            // instance.props = node.props
+            // node.props = null
 
-        // 节点需要移动位置
-        if (oldNode.index !== newNode.index) {
-            patches.push({ type: MOVE, oldNode, newNode })
+            instance.$vnode = newNode // 组件实例保存节点
+            newNode.$instance = instance // 节点保存组件实例
+            // 我们约定render函数返回的是单个节点
+            let child = instance.render()
+
+            // 为render函数中的节点更新fiber相关的属性
+            newNode.children = bindFiber(newNode, [child])
+            renderDOM(child, null)
+        }
+    } else {
+        if (isComponent(newNode.type)) {
+            let $instance = oldNode.$instance
+            // 更新时，复用DOM实例
+            newNode.$instance = oldNode.$instance // 复用组件实例
+            let nextState = $instance.nextState
+            if (nextState) {
+                $instance.state = nextState
+                $instance.nextState = null
+            }
+        } else {
+            // 如果存在有变化的属性，则使用新节点的属性更新旧节点
+            let attrs = diffAttr(oldNode.props, newNode.props) // 发生变化的属性
+            if (Object.keys(attrs).length > 0) {
+                patches.push({ type: UPDATE, oldNode, newNode, attrs })
+            }
+
+            // 节点需要移动位置
+            if (oldNode.index !== newNode.index) {
+                patches.push({ type: MOVE, oldNode, newNode })
+            }
+
         }
         newNode.$el = oldNode.$el // 直接复用旧节点
-        // 继续比较子节点
     }
 }
 
@@ -183,106 +217,3 @@ function diffChildren(oldChildren, newChildren, patches) {
         })
     })
 }
-
-
-// let workInProgress, currentWorkRoot;
-// function scheduleWork(fiberRoot) {
-//     workInProgress = fiberRoot;
-//     currentWorkRoot = fiberRoot;
-
-//     // 浏览器在空闲期间会持续调用workLoop，从workInProgress开始继续diff
-//     requestHostCallback(workLoop);
-// }
-
-// function workLoop() {
-//     while (workInProgress) {
-//         // 判断当前帧是否完成，每完成一个节点的diff，就将控制权交给浏览器，检测
-//         if (shouldYield()) {
-//             // 当前时间切片已用光，但diff流程未结束，浏览器会在合适的实际继续调用workInProgress
-//             return true;
-//         } else {
-//             // 可以继续进行下一个节点的diff
-//             workInProgress = performUnitWork(workInProgress);
-//         }
-//     }
-// }
-
-// function performUnitWork(fiber) {
-//     let newChildren = getFiberNewChildren(fiber); // 获得更新后的newChildren
-//     diff(fiber, newChildren, oldChildren); // 如果存在子节点，则更新workInProgress
-
-//     // 返回workLoop，继续遍历
-//     if (fiber.child) {
-//         return fiber.child;
-//     }
-//     while (fiber) {
-//         // 然后遍历兄弟节点，完成兄弟节点的diff操作
-//         if (fiber.sibling) {
-//             return fiber.sibling;
-//         }
-//         // 回到父节点
-//         fiber = fiber.return;
-//         if (currentWorkRoot === fiber) {
-//             return null;
-//         }
-//     }
-// }
-// // 找到旧节点
-// function getFiberChildren(fiber) {
-//     let child = fiber.child;
-//     let children = [];
-//     while (child) {
-//         children.push(child);
-//         child = child.sibling;
-//     }
-//     return children;
-// }
-// function diff(parentFiber, newChildren) {
-//     let prevFiber = null;
-//     let oldChildren = getFiberChildren(fiber); // 获取旧的子节点列表
-//     let i;
-//     // 新节点与旧节点对比
-//     for (i = 0; i < newChildren.length; ++i) {
-//         let newNode = newChildren[i];
-//         let oldFiber = oldChildren[i];
-//         let newFiber;
-//         // 此处与前面递归实现的比较逻辑基本相同
-//         if (oldFiber) {
-//             // 类型相同，表示节点实例可复用
-//             if (isSameVnode(newNode, oldFiber)) {
-//                 if (diffAttr(newNode, oldFiber)) {
-//                     // 属性不同，标记为更新
-//                     newFiber = createFiber(newNode, UPDATE);
-//                     newFiber.alternate = oldFiber;
-//                 } else {
-//                     // 属性相同，可以完全复用
-//                     newFiber = oldFiber;
-//                 }
-//             } else {
-//                 // 类型不同，标记为替换
-//                 newFiber = createFiber(newNode, REPLACE);
-//             }
-//             newFiber.alternate = oldFiber;
-//         } else {
-//             // 当前位置不存在旧节点，表示新增
-//             newFiber = createFiber(newNode, INSERT);
-//         }
-
-//         // 调整fiber之间的引用，构建新的fiber树
-//         newFiber.return = parentFiber;
-//         if (prevFiber) {
-//             prevFiber.sibling = newFiber;
-//         } else {
-//             // 更新父元素的子节点
-//             parentFiber.child = newFiber;
-//         }
-//         prevFiber = newFiber;
-//     }
-
-//     // 移除剩余未被比较的旧节点
-//     for (; i < oldChildren.length; ++i) {
-//         let oldFiber = oldChildren[i];
-//         oldFiber.patchTag = REMOVE;
-//         enqueueUpdate(parentFiber, oldFiber); // 由于被删除的节点不存在fiber树中，因此交给父节点托管
-//     }
-// }
