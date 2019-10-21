@@ -55,21 +55,13 @@ function diff(oldFiber, newFiber, cb) {
     scheduleWork(workLoop)
 }
 
-
 function performUnitWork(fiber, patches) {
     let oldFiber = fiber.oldFiber
+    let oldChildren = oldFiber && oldFiber.children || []
 
     // 任务一：对比当前新旧节点，收集变化
     diffFiber(oldFiber, fiber, patches)
     // 任务二：为新节点中children的每个元素找到需要对比的旧节点，设置oldFiber属性，方便下个循环继续执行performUnitWork
-    let oldChildren
-    if (isComponent(fiber.type) && fiber.$instance) {
-        let child = fiber.$instance.render()
-        oldChildren = fiber.children
-        fiber.children = bindFiber(fiber, [child])
-    } else {
-        oldChildren = oldFiber && oldFiber.children || []
-    }
     diffChildren(oldChildren, fiber.children, patches)
 
     // 将游标移动至新vnode树中的下一个节点，以
@@ -98,33 +90,50 @@ function performUnitWork(fiber, patches) {
 }
 // 我们保证比较的节点的type实现相同的
 function diffFiber(oldNode, newNode, patches) {
+
+    // 组件节点的子节点是在diff过程中动态生成的
+    function renderComponentChildren(node) {
+        let instance = node.$instance
+        // 我们约定render函数返回的是单个节点
+        let child = instance.render()
+        // 为render函数中的节点更新fiber相关的属性
+        node.children = bindFiber(node, [child])
+        // 保存父节点的索引值，插入真实DOM节点
+        child.index = node.index
+    }
+
     if (!oldNode) {
         // 当前节点与其子节点都将插入
-        patches.push({ type: INSERT, newNode })
         if (isComponent(newNode.type)) {
             let component = newNode.type
             let instance = new component()
-            // instance.props = node.props
-            // node.props = null
+            // instance.props = newNode.props
 
             instance.$vnode = newNode // 组件实例保存节点
             newNode.$instance = instance // 节点保存组件实例
-            // 我们约定render函数返回的是单个节点
-            let child = instance.render()
-
-            // 为render函数中的节点更新fiber相关的属性
-            newNode.children = bindFiber(newNode, [child])
-            renderDOM(child, null)
+            renderComponentChildren(newNode)
         }
+
+        patches.push({ type: INSERT, newNode })
     } else {
+        // 更新时
         if (isComponent(newNode.type)) {
-            let $instance = oldNode.$instance
-            // 更新时，复用DOM实例
+            // 组件节点需要判断状态是否发生了变化，如果已变化，则需要对比新旧组件子节点
+            let instance = oldNode.$instance
+            // 更新时，复用组件实例
             newNode.$instance = oldNode.$instance // 复用组件实例
-            let nextState = $instance.nextState
-            if (nextState) {
-                $instance.state = nextState
-                $instance.nextState = null
+            let nextState = instance.nextState
+            let shouldUpdate = instance.shouldComponentUpdate ? instance.shouldComponentUpdate() : true
+
+            if ((nextState && shouldUpdate) || instance._isforce) {
+                if (nextState) {
+                    instance.state = nextState // 在此处更新组件的state
+                    instance.nextState = null
+                }
+                renderComponentChildren(newNode)
+            } else {
+                // 未进行任何修改，则直接使用之前的子节点
+                newNode.children = oldNode.children
             }
         } else {
             // 如果存在有变化的属性，则使用新节点的属性更新旧节点
@@ -181,7 +190,8 @@ function diffChildren(oldChildren, newChildren, patches) {
     })
 
     // 在遍历旧列表时，先比较类型与key均相同的节点，如果新节点中不存在key相同的节点，才会将旧节点保存起来
-    let typeMap = {}
+    // 我们在执行组件时扩展了type，因此这里需要使用Map来保存type，而不能直接使用{}简单字面量
+    let typeMap = new Map()
     oldChildren.forEach(child => {
         let { type, key } = child
         // 先比较类型与key均相同的节点
@@ -192,8 +202,8 @@ function diffChildren(oldChildren, newChildren, patches) {
             vnode.oldFiber = child
         } else {
             // 将剩余的节点保存起来，与剩余的新节点进行比较
-            if (!typeMap[type]) typeMap[type] = []
-            typeMap[type].push(child)
+            if (!typeMap.has(type)) typeMap.set(type, [])
+            typeMap.get(type).push(child)
         }
     })
 
@@ -201,8 +211,9 @@ function diffChildren(oldChildren, newChildren, patches) {
     for (let i = 0; i < newChildren.length; ++i) {
         let cur = newChildren[i]
         if (!cur) continue; // 已在在前面与此时key相同的节点进行比较
-        if (typeMap[cur.type] && typeMap[cur.type].length) {
-            let old = typeMap[cur.type].shift()
+        let arr = typeMap.has(cur.type) && typeMap.get(cur.type) || []
+        if (arr.length) {
+            let old = arr.shift()
             cur.oldFiber = old
         } else {
             cur.oldFiber = null
@@ -210,8 +221,7 @@ function diffChildren(oldChildren, newChildren, patches) {
     }
 
     // 剩余未被使用的旧节点，将其移除
-    Object.keys(typeMap).forEach(type => {
-        let arr = typeMap[type]
+    typeMap.forEach((arr, type) => {
         arr.forEach(old => {
             patches.push({ type: REMOVE, oldNode: old, })
         })

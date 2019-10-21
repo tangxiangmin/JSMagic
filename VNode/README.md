@@ -12,4 +12,4 @@ vnode相关的一些技术实现
 整理的开发文档位于个人博客上:
 * [VNode与递归diff](https://www.shymean.com/article/VNode%E4%B8%8E%E9%80%92%E5%BD%92diff)
 * [Fiber与循环diff](https://www.shymean.com/article/Fiber%E4%B8%8E%E5%BE%AA%E7%8E%AFdiff)
-* [Component：将Vnode封装] // todo
+* [Component：将Vnode封装](https://www.shymean.com/article/VNode%E4%B8%8EComponent)

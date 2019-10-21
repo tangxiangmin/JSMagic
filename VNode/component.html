@@ -19,27 +19,54 @@
     <script>
 
         class SubTitle extends Component {
+            state = {
+                title: 'hello'
+            }
+            changeTitle = () => {
+                return
+                this.setState({
+                    title: 'change'
+                })
+                this.setState({
+                    title: 'change2'
+                })
+            }
             render() {
-                let { title } = this.props
-                return createFiber('h1', {}, [title])
+                let { title } = this.state
+                return createFiber('h1', {
+                    onClick: this.changeTitle
+                }, [title])
             }
         }
+
+
+        class List extends Component {
+            render() {
+                let list = [1, 2, 3]
+
+                let listItem = list.map((item) => {
+                    return createFiber('li', {
+                        key: item
+                    }, [item])
+                })
+                let ul = createFiber('ul', {
+                    class: 'list-simple',
+                }, listItem)
+                return ul
+            }
+        }
+
+        let outerCount = 0
 
         class App extends Component {
             state = {
                 title: 'hello component',
-                list: [1, 2, 3]
+                isTitleShow: true,
+            }
+            shouldComponentUpdate() {
+                return true // 返回false则当前组件及其子组件都不会更新
             }
 
-            // 最原始的更新数据的方法
-            changeTitle0 = () => {
-                this.state.title = 'change title from click handler0'
-                let old = this.vnode
-                let root = this.render()
-                diff(old, root, (patches) => {
-                    doPatch(patches)
-                })
-            }
             // 封装diff
             changeTitle = () => {
                 this.setState({
@@ -55,33 +82,61 @@
                 })
                 // console.log(this.state.title) // 原来的title
             }
+            // remove
+            toggleTitle = () => {
+                this.setState({
+                    isTitleShow: false
+                })
+            }
+
+            // forceUpdate
+            addCount = () => {
+                outerCount++
+                this.forceUpdate()
+            }
+
 
             // render方法返回的是一个vnode节点，并由Root实例维护渲染和更新该节点需要的数据及方法
             render() {
                 // 根据state时初始化数据
-                let { list, title } = this.state
-                let listItem = list.map((item) => {
-                    return createFiber('li', {
-                        key: item
-                    }, [item])
-                })
-                let ul = createFiber('ul', {
-                    class: 'list-simple',
-                }, listItem)
+                let { title, isTitleShow } = this.state
+                // let listItem = list.map((item) => {
+                //     return createFiber('li', {
+                //         key: item
+                //     }, [item])
+                // })
+                // let ul = createFiber('ul', {
+                //     class: 'list-simple',
+                // }, listItem)
 
-                let head = createFiber('h1', {
+                let parentTitle = createFiber('h1', {
                     onClick: this.changeTitle
                 }, [title])
 
-                // 测试子组件
-                // let head = createFiber(SubTitle, {
-                //     title,
-                //     onClick: this.changeTitle
-                // }, [])
+                let removebutton = createFiber('button', {
+                    onClick: this.toggleTitle
+                }, ["toggle title"])
+
+                let children = [removebutton]
+                if (isTitleShow) {
+                    children.push(parentTitle)
+                }
+
+                // // 测试子组件
+                // let head = createFiber(SubTitle, {}, [])
+                // let ul = createFiber(List, {}, [])
+                // let children = [parentTitle, head, ul]
+
+                // 测试forceUpdate
+
+                let countButton = createFiber('p', {
+                    onClick: this.addCount
+                }, [outerCount + ' times click'])
+                children.push(countButton)
 
                 let vnode = createFiber('div', {
                     class: 'page'
-                }, [head, ul])
+                }, children)
                 return vnode
             }
         }
@@ -90,7 +145,6 @@
         let root = createFiber(App, {}, [])
         renderDOM(root, document.getElementById("app"), () => {
             console.log('inited')
-            console.log(root)
         })
     </script>
 </body>

@@ -15,6 +15,7 @@ function createFiber(type, props, children) {
         props,
         key,
         $el: null,
+        index: 0
     }
 
     children = children.map((child, index) => {
@@ -28,7 +29,6 @@ function createFiber(type, props, children) {
                 children: []
             }
         }
-        child.index = index
         return child
     })
 
@@ -38,8 +38,9 @@ function createFiber(type, props, children) {
 
 function bindFiber(parent, children) {
     let firstChild
-    return children.map((child) => {
+    return children.map((child, index) => {
         child.$parent = parent // 每个子节点保存对父节点的引用
+        child.index = index
 
         if (!firstChild) {
             parent.$child = child // 父节点保存对于第一个子节点的引用
