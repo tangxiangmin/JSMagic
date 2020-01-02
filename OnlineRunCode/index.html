@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Socket.IO chat</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            .page {
+                width: 800px;
+                margin: 0 auto;
+            }
+            #content {
+                width: 100%;
+                min-height: 300px;
+                padding: 20px;
+                display: block;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="page">
+            <p>请输入python3代码</p>
+            <textarea id="content">
+username = input('input username:')
+password = input('input password:')
+email = input('input email:')
+
+print('username:%s, password: %s, email:%s' % (username, password, email))
+
+# exit(0)</textarea>
+            <button id="btn">send</button>
+
+            <ul id="list"></ul>
+        </div>
+        <script src="https://cdn.bootcss.com/socket.io/2.3.0/socket.io.js"></script>
+        <script>
+            let socket = io();
+
+            function createStdout(msg) {
+                let li = document.createElement("li");
+                li.innerHTML = `<li> >>> ${msg}：<input class="stdin"/></li>`;
+                list.appendChild(li);
+            }
+            function createResponse(msg) {
+                let li = document.createElement("li");
+                li.innerHTML = `<li> >>> ${msg}`;
+                list.appendChild(li);
+            }
+            // 注册响应
+            socket.on("stdout", function(msg) {
+                createStdout(msg);
+            });
+            socket.on("code response", function(msg) {
+                createResponse(msg);
+            });
+
+            // 注册事件
+            // 提交代码
+            btn.onclick = function send() {
+                let code = content.value;
+                socket.emit("run code", code);
+            };
+            // 脚本input等待输入
+            function codeInput(e) {
+                let target = e.target;
+                let val = target.value;
+                val && socket.emit("code input", val);
+            }
+            // 提交input输入
+            list.onclick = function(e) {
+                let target = e.target;
+                if (target.classList.contains("stdin")) {
+                    target.removeEventListener("blur", codeInput);
+                    target.addEventListener("blur", codeInput);
+                }
+            };
+        </script>
+    </body>
+</html>
