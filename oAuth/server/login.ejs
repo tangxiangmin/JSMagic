@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .login {
+            width: 300px;
+            margin: 50px auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="login">
+        <h1>Server 登录</h1>
+        <form action="/login" method="post" enctype="application/json">
+            <input type="hidden" value="<%= appId %>" name="appId">
+            <input type="hidden" value="<%= redirect %>" name="redirect">
+            <div>
+                账号：<input name="account" type="text" value="test" placeholder="输入账号">
+            </div>
+            <div>
+                密码：<input name="password" type="password" value="123456" placeholder="密码">
+            </div>
+            <div>
+                <button type="submit">确定</button>
+            </div>
+        </form>
+    </div>
+
+</body>
+</html>
