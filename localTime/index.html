@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <button id="J_Countdown">click</button>
+        <script src="./index.js"></script>
+        <script>
+            function countDown() {
+                let { deadline } = getDeadline();
+
+                let count = Math.round(
+                    (new Date(deadline) - new Date()) / 1000
+                );
+
+                return loop;
+
+                function loop() {
+                    J_Countdown.innerHTML = count + "s";
+                    count--;
+                    setTimeout(() => {
+                        loop();
+                    }, 1000);
+                }
+                // 异步获取截止时间
+                function getDeadline() {
+                    return { deadline: "2020-07-22 00:00:00" };
+                }
+            }
+
+            J_Countdown.onclick = countDown();
+        </script>
+    </body>
+</html>
